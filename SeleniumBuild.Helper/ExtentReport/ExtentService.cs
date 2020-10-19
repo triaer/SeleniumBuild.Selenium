@@ -16,7 +16,6 @@ namespace SeleniumBuild.Helper.ExtentReport
 	public class ExtentService
 	{
 		private static readonly Lazy<ExtentReports> _lazy = new Lazy<ExtentReports>(() => new ExtentReports());
-
 		public static ExtentReports Instance { get { return _lazy.Value; } }
 
 		static ExtentService()
@@ -27,17 +26,32 @@ namespace SeleniumBuild.Helper.ExtentReport
 		{
 		}
 
-		public static ExtentTest CreateTest(string testName, string reportPath, string description = null)
+		public static ExtentTest CreateTest(string testName, string reportPath, string description = null, string testSuite = "Default")
         {
-			testName = Utils.GetRandomValue(testName);
+			//testName = Utils.GetRandomValue(testName);
 			Directory.CreateDirectory(reportPath);
+			if (Instance.StartedReporterList != null)
+            {
+				var reporter = new ExtentHtmlReporter(reportPath);
+				reporter.Config.ReportName = testName;
+				reporter.Config.DocumentTitle = testName;
+				reporter.Config.Theme = Theme.Standard;
 
-			var reporter = new ExtentHtmlReporter(reportPath);
-			reporter.Config.Theme = Theme.Standard;
-
-			Instance.AttachReporter(reporter);
+				Instance.AttachReporter(reporter);
+			}
+			
 			return Instance.CreateTest(testName, description);
 		}
-	}
 
+		public static void Flush(string reportPath)
+        {
+			var reportFilePath = reportPath + "index.html";
+			var reportFiles = Directory.GetFiles(reportPath);
+			foreach(var reportFile in reportFiles)
+            {
+				
+            }
+			//Instance.Flush();
+        }
+	}
 }

@@ -8,7 +8,7 @@ namespace SeleniumBuild.Helper.Common
 {
     public static class Utils
     {
-        public static string GetRandomValue(string value)
+        public static string GetRandomValue(string value = "Default")
         {
             value = string.Format("{0}_{1}", value.Replace(' ', '_'), DateTime.Now.ToString("yyyyMMddhhmmss"));
             return value;

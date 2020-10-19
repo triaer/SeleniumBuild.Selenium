@@ -3,6 +3,8 @@ using AventStack.ExtentReports.Reporter;
 using AventStack.ExtentReports.Reporter.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace SeleniumBuild.Helper.ExtentReport
@@ -23,6 +25,8 @@ namespace SeleniumBuild.Helper.ExtentReport
 			lock (_synclock)
 			{
 				_parentTest.Value = ExtentService.CreateTest(testName, reportPath, description);
+				_parentTestMap.Add(testName , _parentTest.Value);
+
 				return _parentTest.Value;
 			}
 		}
@@ -30,25 +34,47 @@ namespace SeleniumBuild.Helper.ExtentReport
 		// creates a node
 		// node is added to the parent using the parentName
 		// if the parent is not available, it will be created
-		public static ExtentTest CreateMethod(string parentName, string testName, string description = null)
+		public static ExtentTest CreateMethod(string testName, string methodName, string description = null)
 		{
 			lock (_synclock)
 			{
 				ExtentTest parentTest = null;
-				if (!_parentTestMap.ContainsKey(parentName))
+				if (!_parentTestMap.ContainsKey(testName))
 				{
-					parentTest = ExtentService.Instance.CreateTest(testName);
-					_parentTestMap.Add(parentName, parentTest);
+					parentTest = ExtentService.Instance.CreateTest(methodName);
+					_parentTestMap.Add(testName, parentTest);
 				}
 				else
 				{
-					parentTest = _parentTestMap[parentName];
+					parentTest = _parentTestMap[testName];
 				}
 				_parentTest.Value = parentTest;
-				_childTest.Value = parentTest.CreateNode(testName, description);
+				_childTest.Value = parentTest.CreateNode(methodName, description);
 				return _childTest.Value;
 			}
 		}
+
+		public static ExtentTest CreateStepNode([CallerMemberName] string memberName = "")
+        {
+			lock (_synclock)
+            {
+				if (_childTest.Value == null)
+                {
+					_parentTest.Value.CreateNode(memberName);
+                }
+				else
+                {
+					_parentTest.Value = _childTest.Value;
+					_childTest.Value = _parentTest.Value.CreateNode(memberName);
+				}
+				return _childTest.Value;
+			}
+		}
+
+		public static ExtentTest GetLastNode()
+        {
+			return _childTest.Value;
+        }
 
 		public static ExtentTest CreateMethod(string testName)
 		{
